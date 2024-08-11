@@ -30,25 +30,39 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function getData(uid) {
+    function getSession(uid) {
+        const cacheKey = `enka_data_${uid}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+            return JSON.parse(cachedData);
+        }
+        return null;
+    }
+
+    function setSession(uid, data) {
+        const cacheKey = `enka_data_${uid}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+    }
+
+    async function getData(uid) {
         const corsProxy = 'https://cors-anywhere.herokuapp.com/';
         const apiUrl = `https://enka.network/api/uid/${uid}`;
 
         loadingScreen.style.display = 'flex';
-        fetch(corsProxy + apiUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => parseData(data))
-            .catch(error => {
-                modal.style.display = 'block';
-                loadingScreen.style.display = 'none';
-                modalTitle.innerText = `Ada Masalah!`;
-                modalMessage.innerText = `kayaknya API bang hoyoverse lagi rusak...`;
-            });
+        try {
+            let data = getSession(uid)
+            if (!data) {
+                const response = await fetch(corsProxy + apiUrl);
+                data = await response.json();
+            }
+            setSession(uid, data);
+            parseData(data)
+        } catch (error) {
+            modal.style.display = 'block';
+            loadingScreen.style.display = 'none';
+            modalTitle.innerText = `Ada Masalah!`;
+            modalMessage.innerText = `kayaknya API bang hoyoverse lagi rusak...`;
+        }
 
         function parseData(data) {
             const { nickname, level, finishAchievementNum, towerFloorIndex, towerLevelIndex, showAvatarInfoList = [] } = data.playerInfo || {};
