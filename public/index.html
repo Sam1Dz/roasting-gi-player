@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="9d50e1cc-c377-4fbb-b141-c677efdc6f63"></script>
+    <title>Roasting Genshin Impact Player</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <header>
+                <h1>Roasting Genshin Impact Player</h1>
+            </header>
+            <main>
+                <form id="uid-form">
+                    <input type="text" autocomplete="off" id="uid" name="uid" placeholder="UID Anda" required>
+                    <button type="submit">Kirim</button>
+                </form>
+            </main>
+            <footer>
+                <p>Artwork by <a href="https://www.pixiv.net/en/artworks/111287235" target="_blank">yuuchi_ir</a> on Pixiv</p>
+                <p>Build by <a href="https://github.com/shirokuro-dev" target="_blank">shirokuro-dev</a> on Vercel</p>
+            </footer>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader"></div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-button">&times;</span>
+            <h2 class="modal-title" id="modal-title">Hi!</h2>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
