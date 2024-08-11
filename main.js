@@ -45,8 +45,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getData(uid) {
-        const corsProxy = 'https://cors-anywhere.herokuapp.com/';
-        const apiUrl = `https://enka.network/api/uid/${uid}`;
+        const corsProxy = 'https://proxy.cors.sh/';
+        const apiUrl = `https://enka.network/api/uid/${uid}?info`;
 
         loadingScreen.style.display = 'flex';
         try {
@@ -54,14 +54,19 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!data) {
                 const response = await fetch(corsProxy + apiUrl);
                 data = await response.json();
+                if (response.status === 404) {
+                    modalTitle.innerText = `UID tidak ditemukan!`;
+                    modalMessage.innerText = `coba pake uid lain lagi ngab ...`;
+                }
             }
             setSession(uid, data);
             parseData(data)
         } catch (error) {
-            modal.style.display = 'block';
-            loadingScreen.style.display = 'none';
             modalTitle.innerText = `Ada Masalah!`;
             modalMessage.innerText = `kayaknya API bang hoyoverse lagi rusak...`;
+        } finally {
+            modal.style.display = 'block';
+            loadingScreen.style.display = 'none';
         }
 
         function parseData(data) {
@@ -107,7 +112,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             const avartarCustomes = showAvatarInfoList.filter(({ costumeId }) => costumeId);
             if (avartarCustomes.length) {
-                avatarRoast += `, lu orang kaya ya sampe top up beli ${avartarCustomes.length} kostum karater`
+                avatarRoast += `, lu pasti orang kaya ya sampe top up beli ${avartarCustomes.length} kostum karakter`
             }
 
             modalTitle.innerText = `Hai ${nickname}!`;
