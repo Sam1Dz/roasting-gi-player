@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply flex min-h-screen flex-col items-center justify-center px-3 text-white;
+  }
+}
+
+@layer utilities {
+  .input-anim {
+    transition: border 0.3s;
+  }
+
+  .button-anim {
+    transition: background 0.3s;
+  }
+
+  .utilities-link {
+    @apply text-color-primary hover:text-color-primary/60;
+  }
+
+  .utilities-input {
+    @apply input-anim rounded-[5px] border-[3px] border-solid border-white p-[10px] text-base leading-none text-color-text outline-none hover:border-color-secondary focus:border-color-primary;
+  }
+
+  .utilities-button {
+    @apply button-anim cursor-pointer rounded-[5px] bg-color-secondary p-[13px] text-base leading-none text-color-text hover:bg-color-primary;
+  }
+}
