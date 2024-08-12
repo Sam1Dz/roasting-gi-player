@@ -1,4 +1,11 @@
 window.addEventListener('DOMContentLoaded', () => {
+    const maxx = document.body.clientWidth;
+    const maxy = document.body.clientHeight;
+    const canvas = document.createElement("canvas");
+    document.body.appendChild(canvas);
+    canvas.width = maxx;
+    canvas.height = maxy;
+    
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
@@ -6,6 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('uid-form');
     const loadingScreen = document.getElementById('loading-screen');
     const UIDinput = document.getElementById('uid');
+    const uidAlert = document.getElementById('uidAlert'); 
 
     modal.style.display = 'none';
 
@@ -13,12 +21,32 @@ window.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'none';
     }
 
+    UIDinput.addEventListener('focus', () => {
+        uidAlert.style.visibility = 'hidden';
+    })
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
-        const uid = UIDinput.value;
+        const uid = UIDinput.value.trim();
+        const filteredInput = uid.replace(/\D/g, ''); 
         if (uid === '') {
+            uidAlert.textContent = 'UID tidak boleh kosong';
+            uidAlert.style.visibility = 'visible';
+            return;
+        } else if (uid !== filteredInput) {
+            uidAlert.textContent = 'UID hanya bisa diisi angka';
+            uidAlert.style.visibility = 'visible';
+            return;
+        } else if(uid.length < 9) {
+            uidAlert.textContent = 'UID harus 9 karakter';
+            uidAlert.style.visibility = 'visible';
+            return;
+        } else if(uid.length > 9) {
+            uidAlert.textContent = 'UID hanya 9 karakter';
+            uidAlert.style.visibility = 'visible';
             return;
         }
+        uidAlert.style.visibility = 'hidden';
         getData(uid);
     });
 
@@ -53,13 +81,19 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!data) {
                 const response = await fetch(apiUrl);
                 data = await response.json();
-                if (response.status === 404) {
+                if (response.status == 404) {
                     modalTitle.innerText = `UID tidak ditemukan!`;
                     modalMessage.innerText = `coba pake uid lain lagi ngab ...`;
+                    data = null;
+                }
+                if (response.status == 500) {
+                    modalTitle.innerText = `Ada Masalah!`;
+                    modalMessage.innerText = `kayaknya API bang hoyoverse lagi rusak...`;
+                    data = null;
                 }
             }
+            if(data) parseData(data);
             setSession(uid, data);
-            parseData(data)
         } catch (error) {
             console.log(error);
             
