@@ -14,6 +14,8 @@ import LoadingScreen from '@/components/loading-screen';
 import { GetAccountInfo } from '@/libraries/actions/fetch.action';
 import { GenerateRoastText } from '@/libraries/generateRoastText';
 
+import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
+
 interface TModalRoast {
   isOpen: boolean;
   title: string;
@@ -44,17 +46,31 @@ export default function RootPage() {
     };
     const uid = target.uid.value;
 
-    // Send payload data to server component and get responses back
-    const Response = await GetAccountInfo(uid);
-    if (Response.code === 200 && Response.data) {
-      const roastText = GenerateRoastText(Response.data);
-
+    // use data from session storage if the uid data is available
+    const data = getSessionData(uid.toString());
+    if(data) {
+      const roastText = GenerateRoastText(data);
       setModalRoast({
         isOpen: true,
         title: roastText.title,
         content: roastText.content,
         status: 'success',
       });
+      setIsLoading(false);
+      return;
+    }
+
+    // Send payload data to server component and get responses back
+    const Response = await GetAccountInfo(uid);
+    if (Response.code === 200 && Response.data) {
+      const roastText = GenerateRoastText(Response.data);
+      setModalRoast({
+        isOpen: true,
+        title: roastText.title,
+        content: roastText.content,
+        status: 'success',
+      });
+      setSessionData(uid.toString(), Response.data);
     } else {
       switch (Response.code) {
         case 400:
