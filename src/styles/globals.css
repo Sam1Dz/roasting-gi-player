@@ -3,8 +3,30 @@
 @tailwind utilities;
 
 @layer base {
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
   body {
     @apply flex min-h-screen flex-col items-center justify-center px-3 text-white;
+  }
+}
+
+@layer components {
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 }
 
@@ -17,8 +39,16 @@
     transition: background 0.3s;
   }
 
+  .loading-anim {
+    @apply size-32 animate-[spin_2s_linear_infinite] rounded-full border-[16px] border-t-[16px] border-solid border-[#F3F3F3] border-t-color-primary;
+  }
+
+  .utilities-divider {
+    @apply border-[1px] border-solid border-[#AAA]/25;
+  }
+
   .utilities-link {
-    @apply text-color-primary hover:text-color-primary/60;
+    @apply text-color-primary hover:text-color-primary/75;
   }
 
   .utilities-input {
