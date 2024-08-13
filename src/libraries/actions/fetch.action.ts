@@ -9,7 +9,7 @@ export const GetAccountInfo = async (uid: number) => {
   try {
     const { genshin: GenshinAPI } = new Wrapper({
       language: 'id',
-      cache: true,
+      cache: false,
     });
 
     const PlayerData = await GenshinAPI.getPlayer(uid);
