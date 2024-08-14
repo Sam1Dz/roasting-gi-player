@@ -259,11 +259,19 @@ export default function RootPage() {
         title="Kebijakan Privasi"
         message={
           <React.Fragment>
-            <p className="mb-2">
-              Website Roasting Genshin Impact Player TIDAK MENYIMPAN password,
-              UID, username, email, temporary keys, ataupun data penting lainya.
+            <p className="mb-4">
+              Website Roasting Genshin Impact Player <span className='font-semibold'>TIDAK MENYIMPAN</span> password,
+              UID, username, email, temporary keys, ataupun data penting lainnya. Statistik pengunjung menggunakan&nbsp;
+              <NextLink
+                href="https://eu.umami.is/share/9UTkhbvMBHdyL0SI/roasting-genshin-impact-player.vercel.app"
+                target="_blank"
+                className="utilities-link"
+              >
+                Umami.is
+              </NextLink>
+              &nbsp;.
             </p>
-            <p className="mb-2">
+            <p className="mb-4">
               Jika kamu seorang developer yang mengerti ReactJS ataupun paham
               dengan Web Development dan tertarik mengulik kodenya, kalian bisa
               cek proyek-nya di&nbsp;
