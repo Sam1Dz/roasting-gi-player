@@ -35,10 +35,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html lang="id">
       <Head>
         <script
-          async
           defer
           data-website-id="9d50e1cc-c377-4fbb-b141-c677efdc6f63"
-          src="https://cloud.umami.is/script.js"
+          src="/stats/script.js"
         ></script>
       </Head>
       <body className={`${GIFontJP.variable} font-genshin`}>{children}</body>
