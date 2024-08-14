@@ -2,7 +2,7 @@ import localFont from 'next/font/local';
 
 /* TYPES */
 import type { Metadata } from 'next';
-import Head from 'next/head';
+import Script from 'next/script';
 import type { PropsWithChildren } from '@/types';
 
 import '../styles/globals.css';
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="id">
-      <Head>
-        <script
-          defer
+      <body className={`${GIFontJP.variable} font-genshin`}>
+        {children}
+        <Script
+          strategy="afterInteractive"
           data-website-id="9d50e1cc-c377-4fbb-b141-c677efdc6f63"
-          src="/stats/script.js"
-        ></script>
-      </Head>
-      <body className={`${GIFontJP.variable} font-genshin`}>{children}</body>
+          src="https://cloud.umami.is/script.js"
+        />
+      </body>
     </html>
   );
 }
