@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import NextImage from 'next/image';
 import NextLink from 'next/link';
 
@@ -15,6 +15,7 @@ import { GetAccountInfo } from '@/libraries/actions/fetch.action';
 import { GenerateRoastText } from '@/libraries/generateRoastText';
 
 import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
+import { PassThrough } from 'stream';
 
 interface TModalRoast {
   isOpen: boolean;
@@ -26,6 +27,7 @@ interface TModalRoast {
 export default function RootPage() {
   const [isCopyClipboard, setIsCopyClipboard] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [da, setDa] = React.useState('');
   const [openPolicy, setOpenPolicy] = React.useState(false);
   const [modalRoast, setModalRoast] = React.useState<TModalRoast>({
     isOpen: false,
@@ -33,13 +35,52 @@ export default function RootPage() {
     content: '',
     status: null,
   });
+  const callLlm = async (passing: any) => {
+    const data = passing?.data
+    const {character, player} = data
+    // console.log(player)
+    try {
+      const response = await fetch('/api/llm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Roasting saya pake bahasa gaul, untuk karakter level ${player?.levels?.rank}. Game ghensin impact. Informasi tambahan abyss floor ${player?.abyss?.floor || 'belum ada'}, chamber ${player?.abyss?.chamber || 'belum ada'}  (jawaban format ke style string, boleh kasih emote)`,
+                },
+              ],
+            },
+          ],
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setDa(data.data);
 
+      setModalRoast({
+        isOpen: true,
+        title: player?.username,
+        content: data.data,
+        status: 'success',
+      });
+      setIsLoading(false);
+      // console.log('Response from API CLIENT:', data.data);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      setIsLoading(false);
+    }
+  };
   // Component Function
   const submitData = async (event: React.SyntheticEvent) => {
     event.preventDefault();
-
     setIsLoading(true);
-
     // Get value from text input
     const target = event.target as typeof event.target & {
       uid: { value: number };
@@ -56,28 +97,23 @@ export default function RootPage() {
         content: roastText.content,
         status: 'success',
       });
-      setIsLoading(false);
+    
       return;
     }
 
     // Send payload data to server component and get responses back
     const Response = await GetAccountInfo(uid);
     if (Response.code === 200 && Response.data) {
-      const roastText = GenerateRoastText(Response.data);
-      setModalRoast({
-        isOpen: true,
-        title: roastText.title,
-        content: roastText.content,
-        status: 'success',
-      });
-      setSessionData(uid.toString(), Response.data);
+      // console.log('kode', Response)
+      callLlm(Response)
+      // setSessionData(uid.toString(), da);
     } else {
       switch (Response.code) {
         case 400:
           setModalRoast({
             isOpen: true,
             title: 'UID tidak valid!',
-            content: 'UID yang lu masukin gak valid coy, coba cek lagi dah ...',
+            content: 'UID yang lu masukin gak valid coy, coba cek lagi dah ... Blok',
             status: 'failed',
           });
           break;
@@ -101,8 +137,6 @@ export default function RootPage() {
           break;
       }
     }
-
-    setIsLoading(false);
   };
 
   React.useEffect(() => {
