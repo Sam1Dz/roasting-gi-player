@@ -12,7 +12,6 @@ import LoadingScreen from '@/components/loading-screen';
 
 /* LIBRARIES */
 import { GetAccountInfo } from '@/libraries/actions/fetch.action';
-import { GenerateRoastText } from '@/libraries/generateRoastText';
 
 import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
 
@@ -97,8 +96,8 @@ export default function RootPage() {
     // Send payload data to server component and get responses back
     const Response = await GetAccountInfo(uid);
     if (Response.code === 200 && Response.data) {
-      let data = Response.data;
-      let message = await callLlm(data) as string;
+      const data = Response.data;
+      const message = await callLlm(data) as string;
       setSessionData(uid.toString(), {
         username: data.player.username,
         message: message
