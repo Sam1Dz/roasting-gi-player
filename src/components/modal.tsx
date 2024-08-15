@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx/lite';
 
 interface ModalProps {
-  title?: string;
+  title?: React.ReactNode;
   footer?: React.ReactNode;
   message?: React.ReactNode;
   open: boolean;
@@ -32,7 +32,7 @@ export default function Modal({
           >
             &times;
           </span>
-          <h2 className="text-2xl leading-none text-[#333]">{title}</h2>
+          <div className="text-2xl leading-none text-[#333]">{title}</div>
         </div>
         <div className="utilities-divider" />
         <div className="p-5">

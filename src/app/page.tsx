@@ -14,8 +14,13 @@ import LoadingScreen from '@/components/loading-screen';
 import { GetAccountInfo } from '@/libraries/actions/fetch.action';
 
 import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
+import { GenerateRoastText } from '@/libraries/generateRoastText'
+import { GenerateText } from '@/libraries/actions/gemini-generator'
 
 import { GenshinPlayerData } from '@/types/index'
+import AIIcon from '@/components/AI-icon'
+import CopyIcon from '@/components/copy-icon'
+import Skeleton from '@/components/skeleton'
 
 interface TModalRoast {
   isOpen: boolean;
@@ -27,49 +32,68 @@ interface TModalRoast {
 export default function RootPage() {
   const [isCopyClipboard, setIsCopyClipboard] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isAILoading, setIsAILoading] = React.useState(false);
   const [openPolicy, setOpenPolicy] = React.useState(false);
+  const [playeInfo, setPlayerInfo] = React.useState<GenshinPlayerData>();
   const [modalRoast, setModalRoast] = React.useState<TModalRoast>({
     isOpen: false,
     title: '',
     content: '',
     status: null,
   });
+
   const callLlm = async (passing: GenshinPlayerData) => {
-    const {player} = passing
+    const { player } = passing
     const username = player.username;
     const prfilePicture = player.profilePicture.name;
     const characterCount = player.showcase.length;
-    const customeCount = player.showcase.filter(({costumeId}) => costumeId ).length;
+    const customeCount = player.showcase.filter(({ costumeId }) => costumeId).length;
     try {
-      const response = await fetch('/api/llm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Roasting saya pake bahasa gaul, username ${username}, profile piturenya ${prfilePicture}, untuk karakter level ${player?.levels?.rank}. Game ghensin impact. Informasi tambahan abyss floor ${player?.abyss?.floor || 'belum ada'}, chamber ${player?.abyss?.chamber || 'belum ada'}, jumlah karakter yang diflexing ${characterCount} dan jumlah kostum karakter ${customeCount}  (jawaban format ke style string, boleh kasih emote)`,
-                },
-              ],
-            },
-          ],
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+      const prompt = `
+        Roasting pemain genshin impact ini menggunakan bahasa gaul, username pemain yaitu ${username}, gambar profil pemain menggunakan ${prfilePicture}, untuk level pemain yaitu ${player?.levels?.rank}. Informasi tambahan yaitu pemain sudah di abyss lantai ${player?.abyss?.floor || 'belum ada'} dan chamber ${player?.abyss?.chamber || 'belum ada'}, jumlah karakter yang dipamerkan berjumlah ${characterCount} dan jumlah kostum karakter berjumlah ${customeCount}  (jawaban format ke style string, boleh kasih emote dan gunakan bahasa indonesia)
+      `;
+      const data = await GenerateText(prompt);
       return data.data as string;
-      
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error(error);
       return '';
     }
   };
+
+  const generateAIText = async () => {
+    setIsAILoading(true);
+    const data = playeInfo;
+    if (!data) {
+      setModalRoast({
+        isOpen: true,
+        title: 'UID tidak ditemukan!',
+        content: 'Coba pake UID yang lain ngab ...',
+        status: 'failed',
+      });
+      setIsAILoading(false);
+      return
+    }
+    const message = await callLlm(data) as string;
+    const title = playeInfo.player.username;
+    if (!message) {
+      setModalRoast({
+        isOpen: true,
+        title: 'API AI lagi penuh request!',
+        content: 'Tunggu 5 menit lagi ya ngab, soalnya API AI nya pake yg gratisan...',
+        status: 'failed',
+      });
+      setIsAILoading(false);
+      return
+    }
+    setModalRoast({
+      isOpen: true,
+      title,
+      content: message,
+      status: 'success',
+    });
+    setIsAILoading(false);
+  }
+
   // Component Function
   const submitData = async (event: React.SyntheticEvent) => {
     event.preventDefault();
@@ -82,32 +106,32 @@ export default function RootPage() {
 
     // use data from session storage if the uid data is available
     const data = getSessionData(uid.toString());
-    if(data) {
+    if (data) {
+      const { title, content } = GenerateRoastText(data);
       setModalRoast({
         isOpen: true,
-        title: data.username,
-        content: data.message,
+        title,
+        content,
         status: 'success',
       });
       setIsLoading(false);
-      return;
+      setPlayerInfo(data);
+      return
     }
 
     // Send payload data to server component and get responses back
     const Response = await GetAccountInfo(uid);
     if (Response.code === 200 && Response.data) {
-      const data = Response.data;
-      const message = await callLlm(data) as string;
-      setSessionData(uid.toString(), {
-        username: data.player.username,
-        message: message
-      })
+      const data = Response.data as GenshinPlayerData;
+      const { title, content } = GenerateRoastText(data);
+      setSessionData(uid.toString(), data)
       setModalRoast({
         isOpen: true,
-        title: data.player.username,
-        content: message,
+        title,
+        content,
         status: 'success',
       });
+      setPlayerInfo(data);
       setIsLoading(false);
     } else {
       setIsLoading(false);
@@ -210,13 +234,21 @@ export default function RootPage() {
             >
               shirokuro-dev
             </NextLink>
-            &nbsp;, Enhanced by&nbsp;
+            ,&nbsp;
             <NextLink
               href="https://github.com/Sam1Dz"
               target="_blank"
               className="utilities-link"
             >
               Sam1Dz
+            </NextLink>
+            ,&nbsp;
+            <NextLink
+              href="https://github.com/inudola"
+              target="_blank"
+              className="utilities-link"
+            >
+              inudola
             </NextLink>
             &nbsp;on Github&nbsp;
           </p>
@@ -255,19 +287,42 @@ export default function RootPage() {
       {/* MODAL SCREEN */}
       <Modal
         open={modalRoast.isOpen}
-        onClose={() =>
+        onClose={() => {
           setModalRoast({
             isOpen: false,
             title: '',
             content: '',
             status: null,
           })
+          setIsAILoading(false)
+        }}
+        title={
+          isAILoading ?
+            <Skeleton count={1} />
+            :
+            modalRoast.title
         }
-        title={modalRoast.title}
-        message={modalRoast.content}
+        message={
+          isAILoading ?
+            <Skeleton count={7} />
+            :
+            modalRoast.content
+        }
         footer={
           modalRoast.status === 'success' ? (
-            <div className="flex justify-end">
+            <div className="sm:flex justify-between block ">
+              <button
+                type="button"
+                onClick={() => { generateAIText() }}
+                className={clsx(
+                  isAILoading && '!cursor-not-allowed',
+                  !isAILoading && '!cursor-pointer',
+                  'secondary-button flex items-center mb-2 sm:mb-0',
+                )}
+              >
+                <AIIcon />
+                {isAILoading ? 'Generating...' : 'AI generates'}
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -279,10 +334,11 @@ export default function RootPage() {
                 className={clsx(
                   isCopyClipboard && '!cursor-not-allowed',
                   !isCopyClipboard && '!cursor-pointer',
-                  'utilities-button',
+                  'utilities-button flex items-center',
                 )}
               >
-                {!isCopyClipboard ? 'Salin kata-kata ini' : 'Berhasil disalin!'}
+                <CopyIcon />
+                {!isCopyClipboard ? 'Salin kalimat ini' : 'Berhasil disalin!'}
               </button>
             </div>
           ) : null

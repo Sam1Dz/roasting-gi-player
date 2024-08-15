@@ -6,6 +6,7 @@ import Script from 'next/script';
 import type { PropsWithChildren } from '@/types';
 
 import '../styles/globals.css';
+import { env } from 'process';
 
 const GIFontJP = localFont({
   src: '../styles/fonts/gi-font-jp.ttf',
@@ -35,11 +36,16 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html lang="id">
       <body className={`${GIFontJP.variable} font-genshin`}>
         {children}
-        <Script
-          strategy="afterInteractive"
-          data-website-id="9d50e1cc-c377-4fbb-b141-c677efdc6f63"
-          src="https://cloud.umami.is/script.js"
-        />
+        {
+          env.NODE_ENV === 'production' ?
+          <Script
+            strategy="afterInteractive"
+            data-website-id="9d50e1cc-c377-4fbb-b141-c677efdc6f63"
+            src="https://cloud.umami.is/script.js"
+          />
+          :
+          null
+        }
       </body>
     </html>
   );
