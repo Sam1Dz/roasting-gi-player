@@ -23,7 +23,9 @@ interface TModalRoast {
   content: string;
   status: 'success' | 'failed' | null;
 }
-
+interface Passing {
+  data: any | string;
+}
 export default function RootPage() {
   const [isCopyClipboard, setIsCopyClipboard] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -35,7 +37,7 @@ export default function RootPage() {
     content: '',
     status: null,
   });
-  const callLlm = async (passing: any) => {
+  const callLlm = async (passing: Passing) => {
     const data = passing?.data
     const {character, player} = data
     // console.log(player)
@@ -108,6 +110,7 @@ export default function RootPage() {
       callLlm(Response)
       // setSessionData(uid.toString(), da);
     } else {
+      setIsLoading(false);
       switch (Response.code) {
         case 400:
           setModalRoast({
