@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import NextImage from 'next/image';
 import NextLink from 'next/link';
 
@@ -15,7 +15,8 @@ import { GetAccountInfo } from '@/libraries/actions/fetch.action';
 import { GenerateRoastText } from '@/libraries/generateRoastText';
 
 import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
-import { PassThrough } from 'stream';
+
+import { GenshinPlayerData } from '@/types/index'
 
 interface TModalRoast {
   isOpen: boolean;
@@ -23,13 +24,10 @@ interface TModalRoast {
   content: string;
   status: 'success' | 'failed' | null;
 }
-interface Passing {
-  data: any | string;
-}
+
 export default function RootPage() {
   const [isCopyClipboard, setIsCopyClipboard] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [da, setDa] = React.useState('');
   const [openPolicy, setOpenPolicy] = React.useState(false);
   const [modalRoast, setModalRoast] = React.useState<TModalRoast>({
     isOpen: false,
@@ -37,10 +35,12 @@ export default function RootPage() {
     content: '',
     status: null,
   });
-  const callLlm = async (passing: Passing) => {
-    const data = passing?.data
-    const {character, player} = data
-    // console.log(player)
+  const callLlm = async (passing: GenshinPlayerData) => {
+    const {player} = passing
+    const username = player.username;
+    const prfilePicture = player.profilePicture.name;
+    const characterCount = player.showcase.length;
+    const customeCount = player.showcase.filter(({costumeId}) => costumeId ).length;
     try {
       const response = await fetch('/api/llm', {
         method: 'POST',
@@ -52,7 +52,7 @@ export default function RootPage() {
             {
               parts: [
                 {
-                  text: `Roasting saya pake bahasa gaul, untuk karakter level ${player?.levels?.rank}. Game ghensin impact. Informasi tambahan abyss floor ${player?.abyss?.floor || 'belum ada'}, chamber ${player?.abyss?.chamber || 'belum ada'}  (jawaban format ke style string, boleh kasih emote)`,
+                  text: `Roasting saya pake bahasa gaul, username ${username}, profile piturenya ${prfilePicture}, untuk karakter level ${player?.levels?.rank}. Game ghensin impact. Informasi tambahan abyss floor ${player?.abyss?.floor || 'belum ada'}, chamber ${player?.abyss?.chamber || 'belum ada'}, jumlah karakter yang diflexing ${characterCount} dan jumlah kostum karakter ${customeCount}  (jawaban format ke style string, boleh kasih emote)`,
                 },
               ],
             },
@@ -64,19 +64,11 @@ export default function RootPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setDa(data.data);
-
-      setModalRoast({
-        isOpen: true,
-        title: player?.username,
-        content: data.data,
-        status: 'success',
-      });
-      setIsLoading(false);
-      // console.log('Response from API CLIENT:', data.data);
+      return data.data as string;
+      
     } catch (error) {
       console.error('Fetch error:', error);
-      setIsLoading(false);
+      return '';
     }
   };
   // Component Function
@@ -92,23 +84,32 @@ export default function RootPage() {
     // use data from session storage if the uid data is available
     const data = getSessionData(uid.toString());
     if(data) {
-      const roastText = GenerateRoastText(data);
       setModalRoast({
         isOpen: true,
-        title: roastText.title,
-        content: roastText.content,
+        title: data.username,
+        content: data.message,
         status: 'success',
       });
-    
+      setIsLoading(false);
       return;
     }
 
     // Send payload data to server component and get responses back
     const Response = await GetAccountInfo(uid);
     if (Response.code === 200 && Response.data) {
-      // console.log('kode', Response)
-      callLlm(Response)
-      // setSessionData(uid.toString(), da);
+      let data = Response.data;
+      let message = await callLlm(data) as string;
+      setSessionData(uid.toString(), {
+        username: data.player.username,
+        message: message
+      })
+      setModalRoast({
+        isOpen: true,
+        title: data.player.username,
+        content: message,
+        status: 'success',
+      });
+      setIsLoading(false);
     } else {
       setIsLoading(false);
       switch (Response.code) {

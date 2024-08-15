@@ -11,3 +11,8 @@ export interface GenshinPlayerData {
   ttl: number;
   uid: string;
 }
+
+export interface Messages {
+  message: string,
+  username: string
+}
