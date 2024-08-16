@@ -8,19 +8,21 @@ import clsx from 'clsx/lite';
 
 /* COMPONENTS */
 import Modal from '@/components/modal';
+import Skeleton from '@/components/skeleton';
 import LoadingScreen from '@/components/loading-screen';
+// Icons
+import AIIcon from '@/components/icons/ai-icon';
+import CopyIcon from '@/components/icons/copy-icon';
 
 /* LIBRARIES */
+import { GenerateRoastText } from '@/libraries/generateRoastText';
+import { setSessionData, getSessionData } from '@/libraries/sessionStorage';
+// Actions
+import { GenerateText } from '@/libraries/actions/gemini-generator';
 import { GetAccountInfo } from '@/libraries/actions/fetch.action';
 
-import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
-import { GenerateRoastText } from '@/libraries/generateRoastText'
-import { GenerateText } from '@/libraries/actions/gemini-generator'
-
-import { GenshinPlayerData } from '@/types/index'
-import AIIcon from '@/components/AI-icon'
-import CopyIcon from '@/components/copy-icon'
-import Skeleton from '@/components/skeleton'
+/* TYPES */
+import type { GenshinPlayerData } from '@/types/index';
 
 interface TModalRoast {
   isOpen: boolean;
@@ -43,11 +45,13 @@ export default function RootPage() {
   });
 
   const callLlm = async (passing: GenshinPlayerData) => {
-    const { player } = passing
+    const { player } = passing;
     const username = player.username;
     const prfilePicture = player.profilePicture.name;
     const characterCount = player.showcase.length;
-    const customeCount = player.showcase.filter(({ costumeId }) => costumeId).length;
+    const customeCount = player.showcase.filter(
+      ({ costumeId }) => costumeId,
+    ).length;
     try {
       const prompt = `
         Roasting pemain genshin impact ini menggunakan bahasa gaul, username pemain yaitu ${username}, gambar profil pemain menggunakan ${prfilePicture}, untuk level pemain yaitu ${player?.levels?.rank}. Informasi tambahan yaitu pemain sudah di abyss lantai ${player?.abyss?.floor || 'belum ada'} dan chamber ${player?.abyss?.chamber || 'belum ada'}, jumlah karakter yang dipamerkan berjumlah ${characterCount} dan jumlah kostum karakter berjumlah ${customeCount}  (jawaban format ke style string, boleh kasih emote dan gunakan bahasa indonesia)
@@ -71,19 +75,20 @@ export default function RootPage() {
         status: 'failed',
       });
       setIsAILoading(false);
-      return
+      return;
     }
-    const message = await callLlm(data) as string;
+    const message = (await callLlm(data)) as string;
     const title = playeInfo.player.username;
     if (!message) {
       setModalRoast({
         isOpen: true,
         title: 'API AI lagi penuh request!',
-        content: 'Tunggu 5 menit lagi ya ngab, soalnya API AI nya pake yg gratisan...',
+        content:
+          'Tunggu 5 menit lagi ya ngab, soalnya API AI nya pake yg gratisan...',
         status: 'failed',
       });
       setIsAILoading(false);
-      return
+      return;
     }
     setModalRoast({
       isOpen: true,
@@ -92,7 +97,7 @@ export default function RootPage() {
       status: 'success',
     });
     setIsAILoading(false);
-  }
+  };
 
   // Component Function
   const submitData = async (event: React.SyntheticEvent) => {
@@ -116,7 +121,7 @@ export default function RootPage() {
       });
       setIsLoading(false);
       setPlayerInfo(data);
-      return
+      return;
     }
 
     // Send payload data to server component and get responses back
@@ -124,7 +129,7 @@ export default function RootPage() {
     if (Response.code === 200 && Response.data) {
       const data = Response.data as GenshinPlayerData;
       const { title, content } = GenerateRoastText(data);
-      setSessionData(uid.toString(), data)
+      setSessionData(uid.toString(), data);
       setModalRoast({
         isOpen: true,
         title,
@@ -140,7 +145,8 @@ export default function RootPage() {
           setModalRoast({
             isOpen: true,
             title: 'UID tidak valid!',
-            content: 'UID yang lu masukin gak valid coy, coba cek lagi dah ... Blok',
+            content:
+              'UID yang lu masukin gak valid coy, coba cek lagi dah ... Blok',
             status: 'failed',
           });
           break;
@@ -293,31 +299,23 @@ export default function RootPage() {
             title: '',
             content: '',
             status: null,
-          })
-          setIsAILoading(false)
+          });
+          setIsAILoading(false);
         }}
-        title={
-          isAILoading ?
-            <Skeleton count={1} />
-            :
-            modalRoast.title
-        }
-        message={
-          isAILoading ?
-            <Skeleton count={7} />
-            :
-            modalRoast.content
-        }
+        title={isAILoading ? <Skeleton count={1} /> : modalRoast.title}
+        message={isAILoading ? <Skeleton count={7} /> : modalRoast.content}
         footer={
           modalRoast.status === 'success' ? (
-            <div className="sm:flex justify-between block ">
+            <div className="block justify-between sm:flex">
               <button
                 type="button"
-                onClick={() => { generateAIText() }}
+                onClick={() => {
+                  generateAIText();
+                }}
                 className={clsx(
                   isAILoading && '!cursor-not-allowed',
                   !isAILoading && '!cursor-pointer',
-                  'secondary-button flex items-center mb-2 sm:mb-0',
+                  'secondary-button mb-2 flex items-center sm:mb-0',
                 )}
               >
                 <AIIcon />
@@ -353,8 +351,10 @@ export default function RootPage() {
         message={
           <React.Fragment>
             <p className="mb-4">
-              Website Roasting Genshin Impact Player <span className='font-semibold'>TIDAK MENYIMPAN</span> password,
-              UID, username, email, temporary keys, ataupun data penting lainnya. Statistik pengunjung menggunakan&nbsp;
+              Website Roasting Genshin Impact Player{' '}
+              <span className="font-semibold">TIDAK MENYIMPAN</span> password,
+              UID, username, email, temporary keys, ataupun data penting
+              lainnya. Statistik pengunjung menggunakan&nbsp;
               <NextLink
                 href="https://eu.umami.is/share/9UTkhbvMBHdyL0SI/roasting-genshin-impact-player.vercel.app"
                 target="_blank"

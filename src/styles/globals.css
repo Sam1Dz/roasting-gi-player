@@ -60,6 +60,6 @@
   }
 
   .secondary-button {
-    @apply cursor-pointer rounded-[5px] p-[13px] border-2 border-solid border-color-primary hover:border-color-secondary rounded-[5px] p-[13px] text-base leading-none text-color-primary hover:text-color-secondary;
+    @apply cursor-pointer rounded-[5px] border-2 border-solid border-color-primary p-[13px] text-base leading-none text-color-primary hover:border-color-secondary hover:text-color-secondary;
   }
 }
