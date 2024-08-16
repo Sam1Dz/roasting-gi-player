@@ -1,10 +1,8 @@
 'use server';
 
-import { env } from 'process';
-
 export const GenerateText = async (prompt: string) => {
   try {
-    const apiKey = env.NEXT_API_KEY;
+    const apiKey = process.env.NEXT_API_KEY;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
     const body = JSON.stringify({
       contents: [

@@ -1,6 +1,10 @@
 import clsx from 'clsx/lite';
 
-export default function Skeleton({ count }: { count: number }) {
+interface SkeletonProps {
+  count: number;
+}
+
+export default function Skeleton({ count }: SkeletonProps) {
   const rows = new Array(count).fill(null);
   return (
     <div role="status" className="max-w-sm animate-pulse">

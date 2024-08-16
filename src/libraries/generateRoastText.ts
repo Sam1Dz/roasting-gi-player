@@ -1,4 +1,4 @@
-/* TYPESCRIPT */
+/* TYPES */
 import type { GenshinPlayerData } from '@/types';
 
 const isJapanese = (text: string) => {
