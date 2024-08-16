@@ -13,6 +13,6 @@ export interface GenshinPlayerData {
 }
 
 export interface Messages {
-  message: string,
-  username: string
+  message: string;
+  username: string;
 }

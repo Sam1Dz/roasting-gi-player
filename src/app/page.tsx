@@ -8,19 +8,21 @@ import clsx from 'clsx/lite';
 
 /* COMPONENTS */
 import Modal from '@/components/modal';
+import Skeleton from '@/components/skeleton';
 import LoadingScreen from '@/components/loading-screen';
+// Icons
+import AIIcon from '@/components/icons/ai-icon';
+import CopyIcon from '@/components/icons/copy-icon';
 
 /* LIBRARIES */
+import { GenerateRoastText } from '@/libraries/generateRoastText';
+import { setSessionData, getSessionData } from '@/libraries/sessionStorage';
+// Actions
+import { GenerateText } from '@/libraries/actions/gemini-generator';
 import { GetAccountInfo } from '@/libraries/actions/fetch.action';
 
-import { setSessionData, getSessionData } from '@/libraries/sessionStorage'
-import { GenerateRoastText } from '@/libraries/generateRoastText'
-import { GenerateText } from '@/libraries/actions/gemini-generator'
-
-import { GenshinPlayerData } from '@/types/index'
-import AIIcon from '@/components/AI-icon'
-import CopyIcon from '@/components/copy-icon'
-import Skeleton from '@/components/skeleton'
+/* TYPES */
+import type { GenshinPlayerData } from '@/types/index';
 
 interface TModalRoast {
   isOpen: boolean;
@@ -34,6 +36,7 @@ export default function RootPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isAILoading, setIsAILoading] = React.useState(false);
   const [openPolicy, setOpenPolicy] = React.useState(false);
+  const [openCredits, setOpenCredits] = React.useState(false);
   const [playeInfo, setPlayerInfo] = React.useState<GenshinPlayerData>();
   const [modalRoast, setModalRoast] = React.useState<TModalRoast>({
     isOpen: false,
@@ -42,12 +45,15 @@ export default function RootPage() {
     status: null,
   });
 
+  // Component Function
   const callLlm = async (passing: GenshinPlayerData) => {
-    const { player } = passing
+    const { player } = passing;
     const username = player.username;
     const prfilePicture = player.profilePicture.name;
     const characterCount = player.showcase.length;
-    const customeCount = player.showcase.filter(({ costumeId }) => costumeId).length;
+    const customeCount = player.showcase.filter(
+      ({ costumeId }) => costumeId,
+    ).length;
     try {
       const prompt = `
         Roasting pemain genshin impact ini menggunakan bahasa gaul, username pemain yaitu ${username}, gambar profil pemain menggunakan ${prfilePicture}, untuk level pemain yaitu ${player?.levels?.rank}. Informasi tambahan yaitu pemain sudah di abyss lantai ${player?.abyss?.floor || 'belum ada'} dan chamber ${player?.abyss?.chamber || 'belum ada'}, jumlah karakter yang dipamerkan berjumlah ${characterCount} dan jumlah kostum karakter berjumlah ${customeCount}  (jawaban format ke style string, boleh kasih emote dan gunakan bahasa indonesia)
@@ -71,19 +77,20 @@ export default function RootPage() {
         status: 'failed',
       });
       setIsAILoading(false);
-      return
+      return;
     }
-    const message = await callLlm(data) as string;
+    const message = (await callLlm(data)) as string;
     const title = playeInfo.player.username;
     if (!message) {
       setModalRoast({
         isOpen: true,
         title: 'API AI lagi penuh request!',
-        content: 'Tunggu 5 menit lagi ya ngab, soalnya API AI nya pake yg gratisan...',
+        content:
+          'Tunggu 5 menit lagi ya ngab, soalnya API AI nya pake yg gratisan...',
         status: 'failed',
       });
       setIsAILoading(false);
-      return
+      return;
     }
     setModalRoast({
       isOpen: true,
@@ -92,9 +99,8 @@ export default function RootPage() {
       status: 'success',
     });
     setIsAILoading(false);
-  }
+  };
 
-  // Component Function
   const submitData = async (event: React.SyntheticEvent) => {
     event.preventDefault();
     setIsLoading(true);
@@ -116,7 +122,7 @@ export default function RootPage() {
       });
       setIsLoading(false);
       setPlayerInfo(data);
-      return
+      return;
     }
 
     // Send payload data to server component and get responses back
@@ -124,7 +130,7 @@ export default function RootPage() {
     if (Response.code === 200 && Response.data) {
       const data = Response.data as GenshinPlayerData;
       const { title, content } = GenerateRoastText(data);
-      setSessionData(uid.toString(), data)
+      setSessionData(uid.toString(), data);
       setModalRoast({
         isOpen: true,
         title,
@@ -140,7 +146,8 @@ export default function RootPage() {
           setModalRoast({
             isOpen: true,
             title: 'UID tidak valid!',
-            content: 'UID yang lu masukin gak valid coy, coba cek lagi dah ... Blok',
+            content:
+              'UID yang lu masukin gak valid coy, coba cek lagi dah ... Blok',
             status: 'failed',
           });
           break;
@@ -214,45 +221,21 @@ export default function RootPage() {
           </form>
         </main>
         <footer className="mt-5 text-center text-xs leading-normal">
-          <p>
-            Artwork by&nbsp;
-            <NextLink
-              href="https://www.pixiv.net/en/artworks/111287235"
-              target="_blank"
-              className="utilities-link"
+          <div className="mt-6 flex flex-row justify-center gap-4">
+            <p
+              className="utilities-link cursor-pointer text-base leading-none"
+              onClick={() => setOpenPolicy(true)}
             >
-              yuuchi_ir
-            </NextLink>
-            &nbsp;on Pixiv
-          </p>
-          <p>
-            Build by&nbsp;
-            <NextLink
-              href="https://github.com/shirokuro-dev"
-              target="_blank"
-              className="utilities-link"
+              Kebijakan Privasi
+            </p>
+            <p
+              className="utilities-link cursor-pointer text-base leading-none"
+              onClick={() => setOpenCredits(true)}
             >
-              shirokuro-dev
-            </NextLink>
-            ,&nbsp;
-            <NextLink
-              href="https://github.com/Sam1Dz"
-              target="_blank"
-              className="utilities-link"
-            >
-              Sam1Dz
-            </NextLink>
-            ,&nbsp;
-            <NextLink
-              href="https://github.com/inudola"
-              target="_blank"
-              className="utilities-link"
-            >
-              inudola
-            </NextLink>
-            &nbsp;on Github&nbsp;
-          </p>
-          <p className="mt-5 text-[#CCCCCC]">
+              Kredit & Atribusi
+            </p>
+          </div>
+          <p className="mt-3 text-[#CCCCCC]">
             &copy; 2024, Project ini&nbsp;
             <NextLink
               href="https://github.com/shirokuro-dev/roasting-genshin-impact-player"
@@ -270,14 +253,6 @@ export default function RootPage() {
               Lisensi ISC
             </NextLink>
           </p>
-          <div className="flex justify-center">
-            <p
-              className="utilities-link mt-5 w-fit cursor-pointer text-base leading-none"
-              onClick={() => setOpenPolicy(true)}
-            >
-              Kebijakan Privasi
-            </p>
-          </div>
         </footer>
       </div>
 
@@ -293,31 +268,23 @@ export default function RootPage() {
             title: '',
             content: '',
             status: null,
-          })
-          setIsAILoading(false)
+          });
+          setIsAILoading(false);
         }}
-        title={
-          isAILoading ?
-            <Skeleton count={1} />
-            :
-            modalRoast.title
-        }
-        message={
-          isAILoading ?
-            <Skeleton count={7} />
-            :
-            modalRoast.content
-        }
+        title={isAILoading ? <Skeleton count={1} /> : modalRoast.title}
+        message={isAILoading ? <Skeleton count={7} /> : modalRoast.content}
         footer={
           modalRoast.status === 'success' ? (
-            <div className="sm:flex justify-between block ">
+            <div className="block justify-between sm:flex">
               <button
                 type="button"
-                onClick={() => { generateAIText() }}
+                onClick={() => {
+                  generateAIText();
+                }}
                 className={clsx(
                   isAILoading && '!cursor-not-allowed',
                   !isAILoading && '!cursor-pointer',
-                  'secondary-button flex items-center mb-2 sm:mb-0',
+                  'secondary-button mb-2 flex items-center sm:mb-0',
                 )}
               >
                 <AIIcon />
@@ -351,42 +318,144 @@ export default function RootPage() {
         onClose={() => setOpenPolicy(false)}
         title="Kebijakan Privasi"
         message={
+          <div className="flex flex-col gap-3">
+            <section>
+              <h3 className="mb-2 text-xl leading-none">
+                <strong>
+                  Apa yang website Roasting Genshin Impact Player kumpulkan dan
+                  kegunaannya
+                </strong>
+              </h3>
+              <ul className="ml-5 list-disc">
+                <li>
+                  Url yang dikunjungi di website Roasting Genshin Impact Player,
+                  referer, browser, sistem operasi, tipe device, negara visitor.
+                  <p className="ml-2 mt-1 text-sm text-color-text/70">
+                    Website Roasting Genshin Impact Player menggunakan&nbsp;
+                    <NextLink
+                      href="https://umami.is/"
+                      target="_blank"
+                      className="utilities-link"
+                    >
+                      Umami.is
+                    </NextLink>
+                    &nbsp;&#40;analitik yang ramah privasi&#41; sehingga kami
+                    bisa melihat apa saja fitur yang digunakan orang-orang, dan
+                    kami bisa menambahkan atau meningkatkan fitur jika
+                    dibutuhkan.
+                  </p>
+                </li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="mb-2 text-xl leading-none">
+                <strong>
+                  Apa yang website Roasting Genshin Impact Player TIDAK
+                  kumpulkan
+                </strong>
+              </h3>
+              <p className="ml-3 text-sm text-color-text/70">
+                Website Roasting Genshin Impact Player&nbsp;
+                <span className="font-semibold">TIDAK MENYIMPAN</span> password,
+                UID, username, email, temporary keys, ataupun data penting
+                lainnya.
+              </p>
+              <p className="ml-3 mt-2 text-sm text-color-text/70">
+                Jika kamu seorang developer yang mengerti ReactJS ataupun paham
+                dengan Web Development dan tertarik mengulik kodenya, kalian
+                bisa cek proyek-nya di&nbsp;
+                <NextLink
+                  href="https://github.com/shirokuro-dev/roasting-genshin-impact-player"
+                  target="_blank"
+                  className="utilities-link"
+                >
+                  shirokuro-dev/roasting-genshin-impact-player
+                </NextLink>
+                &nbsp;di Github.
+              </p>
+              <p className="ml-3 mt-2 text-sm text-color-text/70">
+                Proyek ini bersifat open source dibawah&nbsp;
+                <NextLink
+                  href="https://github.com/shirokuro-dev/roasting-genshin-impact-player/blob/main/LICENSE"
+                  target="_blank"
+                  className="utilities-link"
+                >
+                  Lisensi ISC
+                </NextLink>
+              </p>
+            </section>
+          </div>
+        }
+      />
+
+      {/* MODAL CREDITS & ATTRIBUTION SCREEN */}
+      <Modal
+        open={openCredits}
+        onClose={() => setOpenCredits(false)}
+        title="Kredit & Atribusi"
+        message={
           <React.Fragment>
-            <p className="mb-4">
-              Website Roasting Genshin Impact Player <span className='font-semibold'>TIDAK MENYIMPAN</span> password,
-              UID, username, email, temporary keys, ataupun data penting lainnya. Statistik pengunjung menggunakan&nbsp;
-              <NextLink
-                href="https://eu.umami.is/share/9UTkhbvMBHdyL0SI/roasting-genshin-impact-player.vercel.app"
-                target="_blank"
-                className="utilities-link"
-              >
-                Umami.is
-              </NextLink>
-              &nbsp;.
-            </p>
-            <p className="mb-4">
-              Jika kamu seorang developer yang mengerti ReactJS ataupun paham
-              dengan Web Development dan tertarik mengulik kodenya, kalian bisa
-              cek proyek-nya di&nbsp;
-              <NextLink
-                href="https://github.com/shirokuro-dev/roasting-genshin-impact-player"
-                target="_blank"
-                className="utilities-link"
-              >
-                shirokuro-dev/roasting-genshin-impact-player
-              </NextLink>
-              &nbsp;di Github.
-            </p>
-            <p>
-              Proyek ini bersifat open source dibawah&nbsp;
-              <NextLink
-                href="https://github.com/shirokuro-dev/roasting-genshin-impact-player/blob/main/LICENSE"
-                target="_blank"
-                className="utilities-link"
-              >
-                Lisensi ISC
-              </NextLink>
-            </p>
+            <ul className="ml-5 list-disc">
+              <li>
+                <p>
+                  <NextLink
+                    href="https://github.com/shirokuro-dev/"
+                    target="_blank"
+                    className="utilities-link"
+                  >
+                    shirokuro-dev
+                  </NextLink>
+                  &nbsp;-&nbsp;Founder dari project ini mulai dari ide,
+                  integrasi, dan keseluruhan core web.
+                </p>
+              </li>
+              <li>
+                <p>
+                  <NextLink
+                    href="https://github.com/Sam1Dz/"
+                    target="_blank"
+                    className="utilities-link"
+                  >
+                    Sam1Dz
+                  </NextLink>
+                  &nbsp;-&nbsp;Revamp web ke React Server Components &#40;via
+                  NextJs&#41;, integrasi dengan Typescript, dan penggunaan
+                  Tailwind CSS.
+                </p>
+              </li>
+              <li>
+                <p>
+                  <NextLink
+                    href="https://github.com/inudola/"
+                    target="_blank"
+                    className="utilities-link"
+                  >
+                    inudola
+                  </NextLink>
+                  &nbsp;-&nbsp;Integrasi Generative AI Text dengan Gemini AI
+                  dari google.
+                </p>
+              </li>
+              <li>
+                <p>
+                  <NextLink
+                    href="https://www.pixiv.net/en/users/54939397"
+                    target="_blank"
+                    className="utilities-link"
+                  >
+                    yuuchi_ir
+                  </NextLink>
+                  &nbsp;-&nbsp;Background artwork yang indah.&nbsp;
+                  <NextLink
+                    href="https://www.pixiv.net/en/artworks/111287235"
+                    target="_blank"
+                    className="utilities-link"
+                  >
+                    &#40;Link Artwork via Pixiv&#41;
+                  </NextLink>
+                </p>
+              </li>
+            </ul>
           </React.Fragment>
         }
       />
